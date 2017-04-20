@@ -1,12 +1,11 @@
 #!/bin/bash
 KNIFESUCCESS=1
-#sudo curl https://omnitruck.chef.io/install.sh | sudo bash -s -- -P chefdk -c stable -v 1.3.43
-#chef gem install knife-ec2
+sudo curl https://omnitruck.chef.io/install.sh | sudo bash -s -- -P chefdk -c stable -v 1.3.43
+chef gem install knife-ec2
 if [ ! -f .chef/knife.rb ] || [ ! -f .chef/*.pem ]; then
   echo "You have not put your chef pem file and knife.rb file in place.  Exiting."
   exit 1
 fi
-#mkdir .chef
 while [ $KNIFESUCCESS -ne 0 ]; do
   echo "Please provide your AWS region (i.e. us-west-2)"
   read REGION
@@ -41,6 +40,10 @@ berks install
 berks upload
 knife role from file roles/web.json
 
-echo "#!/bin/bash
-knife ec2 server create -r "role[web]" -I  ami-d2c924b2 -f t2.micro -S dexcom -i ~/.ssh/dexcom.pem --ssh-user centos --region $REGION -g $SG">new_EC2_webserver
+cat > new_EC2_webserver << EOF 
+#!/bin/bash
+knife ec2 server create -r "role[web]" -I  ami-d2c924b2 -f t2.micro -S dexcom -i ~/.ssh/dexcom.pem --ssh-user centos --region $REGION -g $SG
+EOF
 chmod +x new_EC2_webserver
+
+echo "You should now be be able to run new_EC2_webserver to automatically launch an EC2 instance and configure it to complete the challenge."
