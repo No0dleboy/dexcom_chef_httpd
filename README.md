@@ -64,11 +64,15 @@ Watch until instance state changes to "running".  At this point, get the public 
 ## Configure Chef Workstation
 Log in to the Chef workstation you just created.<br>
 Assuming this is a fresh AWS instance, you'll need to install git:<br>
-```sudo yum -y install git```<br>
+```
+sudo yum -y install git
+```
 Pull down my chef code from git.<br>
-```git clone https://github.com/No0dleboy/dexcom_chef_httpd.git
+```
+git clone https://github.com/No0dleboy/dexcom_chef_httpd.git
 cd dexcom_chef_httpd
-mkdir .chef```<br>
+mkdir .chef
+```
 Copy the knife.rb and username.pem file you saved during the Chef server setup to the .chef directory.  Since this is a headless system, I had to use sftp to put the files in place.<br>
 Also copy the AWS dexcom.pem file from the Workstation setup into the ~/.ssh directory.<br>
 
