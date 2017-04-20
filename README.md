@@ -1,6 +1,8 @@
 # dexcom_chef_httpd
 
-This readme contains instructions for setting up a hosted Chef server, an AWS EC2 Chef Workstation, and launching an AWS EC2 instance running CentOS 7.2 which joins the hosted Chef org and is then configured as a basic web-server with the "Hello World" web page.
+This readme contains instructions for setting up a hosted Chef server, an AWS EC2 Chef Workstation, and launching an AWS EC2 instance running CentOS 7.2 which joins the hosted Chef org and is then configured as a basic web-server with the "Hello World" web page.<BR>
+<BR>
+**Even if you already meet the pre-requisites below, please be sure to read the NOTE at the end of each to ensure that you have the needed files and information for the later steps.**
 
 ## Pre-requisites:
 ### Set up hosted Chef Server:
@@ -30,6 +32,7 @@ Click "Next: Review"<br>
 Click "Create user"<br>
 Copy the entires under "Access key ID" and "Secret access key".  You will need these later.<br>
 Click "Close"<br>
+*NOTE: If you already have have an AWS account, you may still wish to create a new user.  Either way, you will need an Access key ID and Secret access key.*
 
 ### Create Chef Workstation in AWS EC2:
 Log in to AWS<br>
@@ -56,16 +59,17 @@ Click "Security Groups" from lefthand panel.<br>
 Record the "Group ID" of the "DexCom-Chef" group for later.<br>
 Click "Instances" in the lefthand panel.<br>
 Watch until instance state changes to "running".  At this point, get the public ip address.  Use whatever ssh method you like to connect using the key you just downloaded and user ec2-user.<br>
+*NOTE: If you already have a Chef Workstation, you will need to create a dexcom key pair on AWS EC2 and save it.
 
-### Configure Chef Workstation
-Log in to the workstation you just created.<br>
-Install git<br>
-sudo yum -y install git<br>
+## Configure Chef Workstation
+Log in to the Chef workstation you just created.<br>
+Assuming this is a fresh AWS instance, you'll need to install git:<br>
+```sudo yum -y install git```<br>
 Pull down my chef code from git.<br>
-git clone https://github.com/No0dleboy/dexcom_chef_httpd.git<br>
-cd dexcom_chef_httpd<br>
-mkdir .chef<br>
+```git clone https://github.com/No0dleboy/dexcom_chef_httpd.git
+cd dexcom_chef_httpd
+mkdir .chef```<br>
 Copy the knife.rb and username.pem file you saved during the Chef server setup to the .chef directory.  Since this is a headless system, I had to use sftp to put the files in place.<br>
 Also copy the AWS dexcom.pem file from the Workstation setup into the ~/.ssh directory.<br>
 
-You should now be able to run config_chef_workstation.  This will prompt you for some of the info that you recorded above, and use it to install and configure chef.
+You should now be able to run ./config_chef_workstation.  This will prompt you for some of the info that you recorded above, and use it to install and configure chef.  It will also create a new_EC2_webserver script which you can run to automatically spin up a new CentOS instance in AWS and configure it to join the Chef org with the 'web' role.
