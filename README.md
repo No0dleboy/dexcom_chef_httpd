@@ -5,7 +5,7 @@ This readme contains instructions for setting up a hosted Chef server, an AWS EC
 **Even if you already meet the pre-requisites below, please be sure to read the NOTE at the end of each to ensure that you have the needed files and information for the later steps.**
 
 ## Pre-requisites:
-### Set up hosted Chef Server:
+##### Set up hosted Chef Server:
 Create a new chef account at https://manage.chef.io/signup.<br>
 Click on "Create New Organization"<br>
 Enter a full name and short name for your organization.  (I used  dexcom_challenge for mine.)<br>
@@ -16,7 +16,7 @@ Click on "Reset Key" on the new pop-up.<br>
 A new pop-up will display your private key.  Click "Download" and save the file somewhere you can find it again.<br>
 *NOTE: If you already have a chef server and org, you will still need your knife config file and user .pem file.*
 
-### Set Up AWS account:
+##### Set Up AWS account:
 I didn't document the initial setup, as I didn't do it as part of this exercise.<br>
 Browse to https://aws.amazon.com/ and sign in.<br>
 Select IAM from the "Security, Identity & Compliance" group<br>
@@ -34,7 +34,7 @@ Copy the entires under "Access key ID" and "Secret access key".  You will need t
 Click "Close"<br>
 *NOTE: If you already have have an AWS account, you may still wish to create a new user.  Either way, you will need an Access key ID and Secret access key.*
 
-### Create Chef Workstation in AWS EC2:
+##### Create Chef Workstation in AWS EC2:
 Log in to AWS<br>
 Select Services -> EC2<br>
 Click on "Launch Instance"<br>
@@ -67,7 +67,7 @@ Assuming this is a fresh AWS instance, you'll need to install git:<br>
 ```
 sudo yum -y install git
 ```
-Pull down my chef code from git.<br>
+Clone this git repo:<br>
 ```
 git clone https://github.com/No0dleboy/dexcom_chef_httpd.git
 cd dexcom_chef_httpd
