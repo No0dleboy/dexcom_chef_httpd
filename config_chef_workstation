@@ -1,25 +1,52 @@
 #!/bin/bash
+
 KNIFESUCCESS=1
 REGION=`curl http://169.254.169.254/latest/dynamic/instance-identity/document 2>/dev/null|grep region|awk -F\" '{print $4}'`
-sudo curl https://omnitruck.chef.io/install.sh | sudo bash -s -- -P chefdk -c stable -v 1.3.43
-chef gem install knife-ec2
+LOG=/tmp/$(basename $0).log
+
+#Check for prerequisites.
 if [ ! -f .chef/knife.rb ] || [ ! -f .chef/*.pem ]; then
   echo "You have not put your chef pem file and knife.rb file in place.  Exiting."
   exit 1
 fi
+
+errorcheck() {
+  RETURN=$?
+  if [ $RETURN -ne 0 ]; then
+    echo $1 | tee -a $LOG
+    exit $RETURN
+  fi
+}
+
+echo "Installing chefdk.  This will take a minute or two."
+sudo curl https://omnitruck.chef.io/install.sh 2>>$LOG | sudo bash -s -- -P chefdk -c stable -v 1.3.43 >>$LOG 2>&1
+errorcheck "chefdk did not install properly.  Exiting."
+
+echo "Installing knife-ec2."
+chef gem install knife-ec2 >>$LOG 2>&1
+errorcheck "knife-ec2 did not install correctly.  Exiting."
+
+# Collect info from user, setup knife.rb and test.
 while [ $KNIFESUCCESS -ne 0 ]; do
   echo "Please provide the security group ID (i.e. sg-7cd06507)"
   read SG
   echo "Please provide your AWS Access Key ID:"
   read AWSKEYID
-  echo "Please provide your AWS Secret Access Key:"
-  read -s AWSKEY
+  prompt="Please provide your AWS Secret Access Key:"$'\n'
+  while IFS= read -p "$prompt" -r -s -n 1 char; do
+    if [[ $char == $'\0' ]]; then
+      break
+    fi
+    prompt='*'
+    AWSKEY+="$char"
+  done
+  echo
   cp .chef/knife.rb .chef/knife.rb.orig
   cat >> .chef/knife.rb << EOF 
 knife[:aws_access_key_id] = "$AWSKEYID"
 knife[:aws_secret_access_key] = "$AWSKEY"
 EOF
-  knife ec2 server list --region $REGION >/dev/null 2>&1
+  knife ec2 server list --region $REGION >> $LOG 2>&1
   KNIFESUCCESS=$?
   if [ $KNIFESUCCESS -ne 0 ]; then
     cp .chef/knife.rb.orig .chef/knife.rb
@@ -28,16 +55,14 @@ EOF
   fi
 done
 
-knife ssl check
-RETURN=$?
-if [ $RETURN -ne 0 ]; then
-  echo "Something is wrong with your ssl config.  You probably loaded the wrong key into .chef.  Try again."
-  exit 1
-fi
-knife cookbook upload dexcom_chef_httpd
-berks install
-berks upload
-knife role from file roles/web.json
+knife ssl check >>$LOG 2>&1
+errorcheck "Something is wrong with your ssl config.  You probably loaded the wrong key into .chef.  Try again."
+
+echo "Uploading cookbooks to Chef Server. This could take a minute or two."
+knife cookbook upload dexcom_chef_httpd >>$LOG 2>&1
+berks install >>$LOG 2>&1
+berks upload >>$LOG 2>&1
+knife role from file roles/web.json >>$LOG 2>&1
 
 cat > new_EC2_webserver << EOF 
 #!/bin/bash
@@ -45,4 +70,4 @@ knife ec2 server create -r "role[web]" -I  ami-d2c924b2 -f t2.micro -S dexcom -i
 EOF
 chmod +x new_EC2_webserver
 
-echo "You should now be be able to run new_EC2_webserver to automatically launch an EC2 instance and configure it to complete the challenge."
+echo "You should now be be able to run ./new_EC2_webserver to automatically launch an EC2 instance and configure it to complete the challenge."
